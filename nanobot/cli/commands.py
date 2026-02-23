@@ -282,12 +282,23 @@ This file stores important information that should persist across sessions.
 def _make_provider(config: Config):
     """Create the appropriate LLM provider from config."""
     from nanobot.providers.litellm_provider import LiteLLMProvider
+    from nanobot.providers.multi_model_provider import MultiModelProvider
     from nanobot.providers.openai_codex_provider import OpenAICodexProvider
     from nanobot.providers.custom_provider import CustomProvider
 
-    model = config.agents.defaults.model
+    defaults = config.agents.defaults
+    model = defaults.model
+    models = defaults.models if defaults.models else [model]
     provider_name = config.get_provider_name(model)
     p = config.get_provider(model)
+
+    # If multiple models are configured, use MultiModelProvider for fallback support
+    if len(models) > 1:
+        return MultiModelProvider(
+            config=config,
+            models=models,
+            default_model=model,
+        )
 
     # OpenAI Codex (OAuth)
     if provider_name == "openai_codex" or model.startswith("openai-codex/"):
@@ -986,7 +997,11 @@ def status():
     if config_path.exists():
         from nanobot.providers.registry import PROVIDERS
 
-        console.print(f"Model: {config.agents.defaults.model}")
+        # Show model information
+        if config.agents.defaults.models:
+            console.print(f"Models (fallback list): {', '.join(config.agents.defaults.models)}")
+        else:
+            console.print(f"Model: {config.agents.defaults.model}")
         
         # Check API keys from registry
         for spec in PROVIDERS:

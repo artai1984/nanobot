@@ -736,6 +736,41 @@ That's it! Environment variables, model prefixing, config matching, and `nanobot
 
 </details>
 
+### Multi-Model Fallback
+
+> [!TIP]
+> Configure multiple models for automatic fallback when a model fails.
+
+You can configure a list of models to try in order. If one model fails, nanobot automatically retries with the next model until all models are exhausted.
+
+**Configuration** (add to `~/.nanobot/config.json`):
+
+```json
+{
+  "agents": {
+    "defaults": {
+      "model": "anthropic/claude-opus-4-5",
+      "models": [
+        "anthropic/claude-opus-4-5",
+        "openai/gpt-4o",
+        "deepseek/deepseek-chat"
+      ]
+    }
+  }
+}
+```
+
+**Features:**
+- Supports models from different providers or the same provider
+- Automatic retry on model failure (network errors, rate limits, model unavailability)
+- Logs show which model succeeded/failed for debugging
+- Backward compatible — if `models` is not configured, uses single `model`
+
+**Use cases:**
+- High availability — ensure service remains available even if a provider/model fails
+- Cost optimization — try cheaper models first, fall back to expensive ones
+- Load balancing — distribute across multiple providers
+- Feature complementarity — different models have different strengths
 
 ### MCP (Model Context Protocol)
 
